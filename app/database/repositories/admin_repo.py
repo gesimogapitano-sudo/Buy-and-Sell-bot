@@ -41,18 +41,20 @@ class AdminRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+
     async def get_admin_by_telegram_id(
         self, telegram_id: int
     ) -> Optional[Administrator]:
         """Get admin record by Telegram user ID."""
         stmt = (
             select(Administrator)
-            .join(User)
+            .join(User, Administrator.user_id == User.id)
             .options(selectinload(Administrator.user))
             .where(User.telegram_id == telegram_id)
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
 
     async def is_admin(self, telegram_id: int) -> bool:
         """Check if a Telegram user is an active administrator."""

@@ -8,12 +8,12 @@ alembic==1.14.0
 greenlet==3.1.1
 
 # Configuration
-pydantic==2.10.3
+pydantic==2.9.2
 pydantic-settings==2.7.0
 python-dotenv==1.0.1
 
 # HTTP client (for AI API calls)
-aiohttp==3.11.11
+aiohttp==3.10.11
 
 # Security
 cryptography==44.0.0

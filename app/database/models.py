@@ -77,7 +77,9 @@ class User(Base):
 
     # Relationships
     administrator: Mapped[Optional["Administrator"]] = relationship(
-        back_populates="user", uselist=False
+        back_populates="user",
+        foreign_keys="Administrator.user_id",
+        uselist=False,
     )
     listings: Mapped[List["Listing"]] = relationship(
         back_populates="seller", foreign_keys="Listing.seller_id"
