@@ -69,7 +69,7 @@ async def suspend_user(
 
     parts = message.text.split()
     if len(parts) < 2:
-        await message.answer("Usage: /suspend <telegram_id>")
+        await message.answer("Usage: /suspend &lt;telegram_id&gt;")
         return
 
     try:
@@ -108,7 +108,7 @@ async def unsuspend_user(
 
     parts = message.text.split()
     if len(parts) < 2:
-        await message.answer("Usage: /unsuspend <telegram_id>")
+        await message.answer("Usage: /unsuspend &lt;telegram_id&gt;")
         return
 
     try:
@@ -173,7 +173,7 @@ async def grant_admin(
 
     parts = message.text.split()
     if len(parts) < 2:
-        await message.answer("Usage: /grant_admin <telegram_id>")
+        await message.answer("Usage: /grant_admin &lt;telegram_id&gt;")
         return
 
     try:
@@ -215,7 +215,7 @@ async def revoke_admin(
 
     parts = message.text.split()
     if len(parts) < 2:
-        await message.answer("Usage: /revoke_admin <telegram_id>")
+        await message.answer("Usage: /revoke_admin &lt;telegram_id&gt;")
         return
 
     try:
