@@ -276,10 +276,24 @@ async def approve_listing(
     listing_svc = ListingService(listing_repo, bot)
     msg_id = await listing_svc.publish_to_channel(listing, cat_name)
 
-    if msg_id:
-        await listing_repo.update_status(
-            listing.id, "published", actor_id=db_user.id
+    if not msg_id:
+        logger.error(
+            "Listing %d was approved but could not be published to channel %s.",
+            listing.id,
+            listing_svc.settings.public_channel_id,
         )
+        await callback.message.edit_text(
+            f"⚠️ Listing #{listing_id} was approved, but it could not be "
+            "published to the channel.\n\n"
+            "Check that the bot is an administrator of the channel with "
+            "permission to post messages, and that PUBLIC_CHANNEL_ID is correct."
+        )
+        await callback.answer("Channel publication failed.", show_alert=True)
+        return
+
+    await listing_repo.update_status(
+        listing.id, "published", actor_id=db_user.id
+    )
 
     # Notify seller
     if listing.seller:
