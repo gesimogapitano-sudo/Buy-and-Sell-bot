@@ -122,6 +122,15 @@ class UserRepository:
         )
         await self.session.execute(stmt)
 
+        existing = await self.session.scalar(
+            select(ConsentRecord).where(
+                ConsentRecord.user_id == user_id,
+                ConsentRecord.notice_version == consent_version,
+            )
+        )
+        if existing:
+            return
+
         # Create consent record
         record = ConsentRecord(
             user_id=user_id,
