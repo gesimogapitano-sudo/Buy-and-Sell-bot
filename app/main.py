@@ -22,6 +22,7 @@ from app.database.engine import close_engine, get_engine, get_session_factory
 from app.database.models import Base
 from app.database.repositories.admin_repo import AdminRepository
 from app.database.repositories.user_repo import UserRepository
+from app.utils.redis_client import close_redis
 
 
 def setup_logging(level: str = "INFO") -> None:
@@ -178,6 +179,7 @@ async def main() -> None:
         logger.error("Fatal error: %s", e, exc_info=True)
     finally:
         await close_engine()
+        await close_redis()
         await bot.session.close()
         logger.info("Bot stopped.")
 
