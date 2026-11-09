@@ -28,7 +28,7 @@ from app.keyboards.keyboards import (
     main_menu,
 )
 from app.locales.strings import t
-from app.utils.helpers import parse_deep_link_payload
+from app.utils.helpers import escape_html, parse_deep_link_payload
 
 logger = logging.getLogger(__name__)
 router = Router(name="start")
@@ -95,10 +95,10 @@ async def cmd_start(
                     from app.utils.helpers import format_price
                     price = format_price(listing.price, listing.currency)
                     text = (
-                        f"📌 <b>{listing.title}</b>\n"
-                        f"💰 {price}\n"
-                        f"📍 {listing.location}\n\n"
-                        f"{listing.description[:300]}{'...' if len(listing.description) > 300 else ''}"
+                        f"📌 <b>{escape_html(listing.title)}</b>\n"
+                        f"💰 {escape_html(price)}\n"
+                        f"📍 {escape_html(listing.location)}\n\n"
+                        f"{escape_html(listing.description[:300])}{'...' if len(listing.description) > 300 else ''}"
                     )
                     await message.answer(
                         text=text,
