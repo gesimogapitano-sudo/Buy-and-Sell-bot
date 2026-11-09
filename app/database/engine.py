@@ -28,15 +28,18 @@ def get_engine() -> AsyncEngine:
     if _engine is None:
         settings = get_settings()
 
-        _engine = create_async_engine(
-            settings.database_url,
-            connect_args={"ssl": "require"},
-            echo=(settings.log_level == "DEBUG"),
-            pool_pre_ping=True,
-            pool_size=5,
-            max_overflow=5,
-            pool_recycle=3600,
-        )
+        if settings.database_url.startswith("postgresql+"):
+            engine_kwargs = {
+                "echo": settings.log_level == "DEBUG",
+                "pool_pre_ping": True,
+                "pool_size": 5,
+                "max_overflow": 5,
+                "pool_recycle": 3600,
+                "connect_args": {"ssl": "require"},
+            }
+        else:
+            engine_kwargs = {"echo": settings.log_level == "DEBUG"}
+        _engine = create_async_engine(settings.database_url, **engine_kwargs)
 
         logger.info("Database engine created.")
 
