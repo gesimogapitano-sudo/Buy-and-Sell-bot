@@ -18,6 +18,7 @@ from app.config import get_settings
 from app.database.engine import get_session_factory
 from app.database.repositories.user_repo import UserRepository
 from app.utils.helpers import safe_log_user
+from app.utils.redis_client import get_redis
 
 logger = logging.getLogger(__name__)
 
@@ -130,13 +131,28 @@ class RateLimitMiddleware(BaseMiddleware):
             window = 60.0  # 1 minute window
             user_id = user.id
 
-            # Clean old timestamps
-            self._user_timestamps[user_id] = [
-                ts for ts in self._user_timestamps[user_id]
-                if now - ts < window
-            ]
+            redis = get_redis()
+            if redis is not None:
+                key = f"rate:user:{user_id}:minute"
+                count = await redis.incr(key)
+                if count == 1:
+                    await redis.expire(key, int(window))
+                if count > settings.message_rate_limit:
+                    logger.warning("Rate limit exceeded for user %s", safe_log_user(user_id))
+                    if isinstance(event, Message):
+                        await event.answer("⏳ You're sending messages too quickly. Please wait a moment before trying again.")
+                    elif isinstance(event, CallbackQuery):
+                        await event.answer("Please wait a moment before trying again.", show_alert=True)
+                    return
 
-            if len(self._user_timestamps[user_id]) >= settings.message_rate_limit:
+            # Clean old timestamps
+            if redis is None:
+                self._user_timestamps[user_id] = [
+                    ts for ts in self._user_timestamps[user_id]
+                    if now - ts < window
+                ]
+
+            if redis is None and len(self._user_timestamps[user_id]) >= settings.message_rate_limit:
                 logger.warning(
                     "Rate limit exceeded for user %s", safe_log_user(user_id)
                 )
@@ -152,7 +168,8 @@ class RateLimitMiddleware(BaseMiddleware):
                     )
                 return  # Block
 
-            self._user_timestamps[user_id].append(now)
+            if redis is None:
+                self._user_timestamps[user_id].append(now)
 
             # Periodic cleanup of inactive users
             self._cleanup_counter += 1
