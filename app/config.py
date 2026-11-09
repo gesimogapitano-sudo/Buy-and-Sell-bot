@@ -54,6 +54,22 @@ class Settings(BaseSettings):
         default=None,
         description="Redis URL for shared FSM state and rate limiting",
     )
+    webhook_url: Optional[str] = Field(
+        default=None,
+        description="Public HTTPS base URL for webhook deployment",
+    )
+    webhook_path: str = Field(
+        default="/telegram/webhook",
+        description="HTTP path used for Telegram webhook updates",
+    )
+    webhook_secret_token: Optional[str] = Field(
+        default=None,
+        description="Secret token used to authenticate Telegram webhook requests",
+    )
+    port: int = Field(
+        default=10000,
+        description="HTTP port used by Render or another web host",
+    )
 
     # ── AI Configuration (Optional) ───────────────────────────────
     ai_provider: Optional[str] = Field(
@@ -211,6 +227,34 @@ class Settings(BaseSettings):
         v = v.strip()
         if v and not v.startswith("@"):
             v = f"@{v}"
+        return v
+
+    @field_validator("webhook_url")
+    @classmethod
+    def validate_webhook_url(cls, v: Optional[str]) -> Optional[str]:
+        """Validate the public URL used by Telegram to deliver updates."""
+        if v is None:
+            return None
+        v = v.strip().rstrip("/")
+        if not v.startswith("https://"):
+            raise ValueError("WEBHOOK_URL must be an HTTPS URL.")
+        return v
+
+    @field_validator("webhook_path")
+    @classmethod
+    def validate_webhook_path(cls, v: str) -> str:
+        """Ensure the webhook path is absolute."""
+        v = v.strip()
+        if not v.startswith("/"):
+            raise ValueError("WEBHOOK_PATH must start with '/'.")
+        return v
+
+    @field_validator("port")
+    @classmethod
+    def validate_port(cls, v: int) -> int:
+        """Validate the HTTP listening port."""
+        if not 1 <= v <= 65535:
+            raise ValueError("PORT must be between 1 and 65535.")
         return v
 
     @model_validator(mode="after")

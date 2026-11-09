@@ -1,7 +1,7 @@
 """
 Application entry point for the Buy & Sell Telegram Marketplace Bot.
 
-Initializes configuration, database, bot, and starts long polling.
+Initializes configuration, database, bot, and starts polling or webhook mode.
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ import asyncio
 import logging
 import sys
 
+from aiohttp import web
 from app.config import get_settings
 from app.bot.bot import create_bot, create_dispatcher
 from app.bot.middleware import (
@@ -23,6 +24,7 @@ from app.database.models import Base
 from app.database.repositories.admin_repo import AdminRepository
 from app.database.repositories.user_repo import UserRepository
 from app.utils.redis_client import close_redis
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 
 def setup_logging(level: str = "INFO") -> None:
@@ -131,6 +133,40 @@ def register_middleware(dp) -> None:
     dp.callback_query.middleware(UserRegistrationMiddleware())
 
 
+async def run_webhook(settings, bot, dp) -> None:
+    """Run the bot behind an HTTP webhook server."""
+    logger = logging.getLogger(__name__)
+    if not settings.webhook_url:
+        raise ValueError("WEBHOOK_URL is required for webhook mode.")
+
+    webhook_url = f"{settings.webhook_url}{settings.webhook_path}"
+    app = web.Application()
+    app.router.add_get("/health", lambda _: web.json_response({"status": "ok"}))
+    SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+        secret_token=settings.webhook_secret_token,
+    ).register(app, path=settings.webhook_path)
+    setup_application(app, dp, bot=bot)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host="0.0.0.0", port=settings.port)
+    await bot.set_webhook(
+        url=webhook_url,
+        drop_pending_updates=True,
+        secret_token=settings.webhook_secret_token,
+    )
+    await site.start()
+    logger.info("Webhook server listening on port %s.", settings.port)
+    logger.info("Telegram webhook configured at %s.", webhook_url)
+
+    try:
+        await asyncio.Event().wait()
+    finally:
+        await runner.cleanup()
+
+
 async def main() -> None:
     """Main application entry point."""
     logger = logging.getLogger(__name__)
@@ -167,12 +203,16 @@ async def main() -> None:
     register_routers(dp)
 
     try:
-        # Delete any pending webhook to ensure long polling works
-        await bot.delete_webhook(drop_pending_updates=True)
-        logger.info("Starting long polling...")
-
-        # Start polling
-        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+        if settings.webhook_url:
+            await run_webhook(settings, bot, dp)
+        else:
+            # Delete any pending webhook to ensure long polling works locally.
+            await bot.delete_webhook(drop_pending_updates=True)
+            logger.info("Starting long polling...")
+            await dp.start_polling(
+                bot,
+                allowed_updates=dp.resolve_used_update_types(),
+            )
     except KeyboardInterrupt:
         logger.info("Received shutdown signal.")
     except Exception as e:
