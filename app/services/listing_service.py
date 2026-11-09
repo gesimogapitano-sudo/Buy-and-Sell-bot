@@ -14,7 +14,7 @@ from app.config import get_settings
 from app.database.models import Listing
 from app.database.repositories.listing_repo import ListingRepository
 from app.locales.strings import t
-from app.utils.helpers import format_condition, format_price
+from app.utils.helpers import escape_html, format_condition, format_price
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +39,12 @@ class ListingService:
         return t(
             "channel_post",
             lang="en",  # Channel posts always in English (default)
-            title=listing.title,
-            description=listing.description,
-            price=price,
-            location=listing.location,
-            category=category_name,
-            condition=condition,
+            title=escape_html(listing.title),
+            description=escape_html(listing.description),
+            price=escape_html(price),
+            location=escape_html(listing.location),
+            category=escape_html(category_name),
+            condition=escape_html(condition),
             contact_link=contact_link,
         )
 
