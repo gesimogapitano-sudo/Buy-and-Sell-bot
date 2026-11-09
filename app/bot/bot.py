@@ -41,7 +41,14 @@ def create_dispatcher() -> Dispatcher:
     Returns:
         Configured aiogram Dispatcher.
     """
-    storage = MemoryStorage()
+    settings = get_settings()
+    if settings.redis_url:
+        from aiogram.fsm.storage.redis import RedisStorage
+
+        storage = RedisStorage.from_url(settings.redis_url)
+        logger.info("Dispatcher created with RedisStorage.")
+    else:
+        storage = MemoryStorage()
+        logger.warning("REDIS_URL is not configured; using process-local MemoryStorage.")
     dp = Dispatcher(storage=storage)
-    logger.info("Dispatcher created with MemoryStorage.")
     return dp

@@ -5,11 +5,17 @@ Shared helper utilities for the Buy & Sell Bot.
 from __future__ import annotations
 
 import logging
+from html import escape
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+
+def escape_html(value: object) -> str:
+    """Escape user-provided text before placing it in Telegram HTML."""
+    return escape(str(value), quote=False)
 
 
 def utc_now() -> datetime:

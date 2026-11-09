@@ -1,5 +1,6 @@
 # Telegram Bot Framework
 aiogram==3.13.1
+redis==5.2.1
 
 # Database
 SQLAlchemy[asyncio]==2.0.36

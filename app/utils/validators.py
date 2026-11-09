@@ -133,7 +133,7 @@ def validate_price(price_str: str) -> Decimal:
             field="price",
         )
 
-    if price <= 0:
+    if not price.is_finite() or price <= 0:
         raise ValidationError("Price must be greater than zero.", field="price")
     if price > Decimal("99999999.99"):
         raise ValidationError(

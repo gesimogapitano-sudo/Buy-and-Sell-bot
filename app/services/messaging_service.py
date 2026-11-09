@@ -14,6 +14,7 @@ from aiogram.types import Message as TGMessage
 from app.database.models import Conversation
 from app.database.repositories.conversation_repo import ConversationRepository
 from app.locales.strings import t
+from app.keyboards.keyboards import conversation_keyboard
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,14 @@ class MessagingService:
         # Determine recipient
         if sender_id == conversation.buyer_id:
             recipient_telegram_id = conversation.seller.telegram_id
+            recipient_lang = conversation.seller.language
             direction = "buyer_to_seller"
         else:
             recipient_telegram_id = conversation.buyer.telegram_id
+            recipient_lang = conversation.buyer.language
             direction = "seller_to_buyer"
+
+        reply_markup = conversation_keyboard(conversation.id, recipient_lang)
 
         # Determine message type and relay accordingly
         try:
@@ -55,6 +60,7 @@ class MessagingService:
                     chat_id=recipient_telegram_id,
                     text=tg_message.text,
                     parse_mode=None,
+                    reply_markup=reply_markup,
                 )
                 relayed_msg_id = relayed.message_id
 
@@ -64,6 +70,7 @@ class MessagingService:
                     chat_id=recipient_telegram_id,
                     photo=photo.file_id,
                     caption=tg_message.caption,
+                    reply_markup=reply_markup,
                 )
                 relayed_msg_id = relayed.message_id
 
@@ -72,6 +79,7 @@ class MessagingService:
                     chat_id=recipient_telegram_id,
                     video=tg_message.video.file_id,
                     caption=tg_message.caption,
+                    reply_markup=reply_markup,
                 )
                 relayed_msg_id = relayed.message_id
 
@@ -79,6 +87,7 @@ class MessagingService:
                 relayed = await self.bot.send_voice(
                     chat_id=recipient_telegram_id,
                     voice=tg_message.voice.file_id,
+                    reply_markup=reply_markup,
                 )
                 relayed_msg_id = relayed.message_id
 
@@ -87,6 +96,7 @@ class MessagingService:
                     chat_id=recipient_telegram_id,
                     document=tg_message.document.file_id,
                     caption=tg_message.caption,
+                    reply_markup=reply_markup,
                 )
                 relayed_msg_id = relayed.message_id
 

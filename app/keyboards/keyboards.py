@@ -296,6 +296,10 @@ def conversation_keyboard(
     return _inline(
         [
             InlineKeyboardButton(
+                text=t("btn_reply", lang),
+                callback_data=f"conv:open:{conversation_id}",
+            ),
+            InlineKeyboardButton(
                 text=t("btn_end_conversation", lang),
                 callback_data=f"conv:end:{conversation_id}",
             )

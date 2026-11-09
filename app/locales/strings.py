@@ -295,6 +295,10 @@ _STRINGS: Dict[str, Dict[str, str]] = {
         "en": "✅ Message sent.",
         "am": "✅ መልዕክት ተላከ።",
     },
+    "btn_reply": {
+        "en": "↩️ Reply",
+        "am": "↩️ መልስ",
+    },
     "message_relay_failed": {
         "en": "⚠️ Could not deliver message. The other party may have blocked the bot.",
         "am": "⚠️ መልዕክት ማድረስ አልተቻለም። ሌላኛው ሰው ቦቱን ሊዘጋ ይችላል።",
