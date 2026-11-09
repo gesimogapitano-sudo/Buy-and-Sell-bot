@@ -50,6 +50,10 @@ class Settings(BaseSettings):
         ...,
         description="Public channel username (with @)",
     )
+    redis_url: Optional[str] = Field(
+        default=None,
+        description="Redis URL for shared FSM state and rate limiting",
+    )
 
     # ── AI Configuration (Optional) ───────────────────────────────
     ai_provider: Optional[str] = Field(
